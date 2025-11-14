@@ -1,7 +1,10 @@
 package ch.heigvd;
 
+import ch.heigvd.commands.Root;
+import picocli.CommandLine;
+
 public class Main {
     public static void main(String[] args) {
-        System.out.println("Hello world!");
+        new CommandLine(new Root()).execute(args);
     }
 }
