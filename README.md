@@ -3,6 +3,9 @@
 ![Maven](https://img.shields.io/badge/build-Maven-blue?logo=apachemaven)
 ![Java](https://img.shields.io/badge/java-21-orange?logo=openjdk)
 
+## Protocole
+La description du protocol applicatif est disponible [ici](protocol/README.md)
+
 ## Auteurs
 - [Quentin Michon](https://github.com/QuentinMichon)
 - [Gianni Bee](https://github.com/GinByte)
