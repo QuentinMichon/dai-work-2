@@ -73,7 +73,7 @@ public class TcpClient {
     public String receive() {
         if(this.in != null) {
             try {
-                return this.in.readLine();  // todo ajouter un timeout ?
+                return this.in.readLine();
             } catch (IOException e) {
                 System.out.println("[Client] Impossible de lire le serveur");
             }

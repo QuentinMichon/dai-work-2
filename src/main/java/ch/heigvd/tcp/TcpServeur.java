@@ -72,7 +72,7 @@ public class TcpServeur {
     public String receive() {
         if(this.in != null) {
             try {
-                return this.in.readLine();  // todo ajouter un timeout ?
+                return this.in.readLine();
             } catch (IOException e) {
                 System.out.println("[Serveur] Impossible de lire le client");
             }
