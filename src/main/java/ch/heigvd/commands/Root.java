@@ -7,8 +7,8 @@
 
 package ch.heigvd.commands;
 
-import ch.heigvd.util.TCPServeur;
-import ch.heigvd.util.TcpClient;
+import ch.heigvd.tcp.TcpServeur;
+import ch.heigvd.tcp.TcpClient;
 import picocli.CommandLine;
 
 import java.io.BufferedReader;
@@ -46,15 +46,41 @@ public class Root implements Runnable {
     protected TYPE type;
 
     //------------------------- SERVEUR -------------------------------------------------------------------------
-
     private void lancement_serveur() {
         System.out.println("Lancement du serveur...");
+        TcpServeur serveur = new TcpServeur(4444);
+        serveur.up();
+
+        String request = "";
+        while(!request.equals("STOP")) {
+            request = serveur.receive();
+            System.out.println("[Serveur] : request from client : " + request);
+        }
+
+        serveur.close();
     }
 
     //------------------------- CLIENT -------------------------------------------------------------------------
 
     private void lancement_client() {
         System.out.println("Lancement du client...");
+        TcpClient client = new TcpClient("localhost", 4444);
+        client.connect();
+
+        try (Reader systemInReader = new InputStreamReader(System.in, StandardCharsets.UTF_8);
+             BufferedReader userIn = new BufferedReader(systemInReader))
+        {
+            String cmd = "";
+
+            while (!cmd.equals("STOP")) {
+                System.out.print("> ");
+                cmd = userIn.readLine();
+                client.send(cmd);
+            }
+
+        } catch(IOException e) {
+            System.out.println("An error occurred.");
+        }
     }
 
     private enum TYPE {
