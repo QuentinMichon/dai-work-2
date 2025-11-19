@@ -223,6 +223,12 @@ public class P4Engine {
             return P4Engine.this.play(col, this);
         }
 
+        public void disconnect() {
+            if(nbPlayer > 1) {
+                nbPlayer--;
+            }
+        }
+
         @Override
         public String toString() {
             return this.name;
