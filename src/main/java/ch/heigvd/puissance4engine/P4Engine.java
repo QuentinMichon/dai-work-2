@@ -22,10 +22,10 @@ public class P4Engine {
         }
     }
 
-    public Player newPlayer(String name) {
+    public Player newPlayer() {
         if(nbPlayer < 2) {
             int id = nbPlayer++;
-            players[id] = new Player(symbolUsers[id], id, name);
+            players[id] = new Player(symbolUsers[id], id);
             return players[id];
         } else {
             return null;
@@ -209,13 +209,16 @@ public class P4Engine {
 
     // INNER CLASS PLAYER joue le role de remote
     public class Player {
-        String name;
+        String name = "";
         char symbol;
         int id;
 
-        private Player(char symbol, int id, String name) {
+        private Player(char symbol, int id) {
             this.symbol = symbol;
             this.id = id;
+        }
+
+        public void setName(String name) {
             this.name = name;
         }
 

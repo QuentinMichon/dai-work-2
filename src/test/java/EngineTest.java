@@ -25,13 +25,19 @@ public class EngineTest {
         P4Engine.Player currentPlayer;
 
 
-        P4Engine.Player player1 = p4Engine.newPlayer("Toto");
-        P4Engine.Player player2 = p4Engine.newPlayer("Tutu");
-        P4Engine.Player player3 = p4Engine.newPlayer("Tata");
+        P4Engine.Player player1 = p4Engine.newPlayer();
+        P4Engine.Player player2 = p4Engine.newPlayer();
+        P4Engine.Player player3 = p4Engine.newPlayer();
 
         testPlayerCreation(player1);
         testPlayerCreation(player2);
         testPlayerCreation(player3);
+
+        player1.setName("Txtx");
+        player2.setName("Toto");
+
+        testPlayerCreation(player1);
+        testPlayerCreation(player2);
 
         currentPlayer = player1;
 
