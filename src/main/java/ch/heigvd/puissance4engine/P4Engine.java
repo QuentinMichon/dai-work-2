@@ -14,6 +14,8 @@ public class P4Engine {
     private final char[] symbolUsers = {'X', 'O'};
     private int playerTurn = 0;
 
+    private Player[] players = new Player[2];
+
     public P4Engine() {
         for (int i = 0; i < MAX_COL; i++) {
             table[i] = new Pile();
@@ -23,9 +25,28 @@ public class P4Engine {
     public Player newPlayer(String name) {
         if(nbPlayer < 2) {
             int id = nbPlayer++;
-            return new Player(symbolUsers[id], id, name);
+            players[id] = new Player(symbolUsers[id], id, name);
+            return players[id];
         } else {
             return null;
+        }
+    }
+
+    public int getNbPlayer() {
+        return nbPlayer;
+    }
+
+    public String getOponentName(Player player) {
+        if(player.id == 0) {
+            if(nbPlayer == 1) {
+                return "";
+            } else {
+                return players[1].name;
+            }
+        } else if(player.id == 1) {
+            return players[0].name;
+        } else {
+            return "";
         }
     }
 
@@ -117,15 +138,20 @@ public class P4Engine {
         return tableString.toString();
     }
 
-    private boolean play(int col, Player player) {
+    private PlayStatus play(int col, Player player) {
         if(player.id == playerTurn) {
-            boolean accepted = table[col].put(player.symbol);
-            if(accepted) {
+            if(col < 0 || col >= MAX_COL) {
+                return PlayStatus.OUT_OF_RANGE;
+            }
+            PlayStatus status = table[col].put(player.symbol);
+            if(status == PlayStatus.ACCEPTED) {
                 playerTurn = (playerTurn + 1) % 2;
-                return true;
+                return status;
+            } else if(status == PlayStatus.COLUMN_FULL) {
+                return status;
             }
         }
-        return false;
+        return PlayStatus.NOT_YOUR_TURN;
     }
 
 
@@ -138,14 +164,14 @@ public class P4Engine {
             Arrays.fill(pile, '-');
         }
 
-        public boolean put(char symbol) {
+        public PlayStatus put(char symbol) {
             if(this.height == MAX_ROW) {
-                return false; // colonne pleine
+                return PlayStatus.COLUMN_FULL; // colonne pleine
             }
 
             pile[this.height] = symbol;
             this.height++;
-            return true;
+            return PlayStatus.ACCEPTED;
         }
     }
 
@@ -193,7 +219,7 @@ public class P4Engine {
             this.name = name;
         }
 
-        public boolean play(int col) {
+        public PlayStatus play(int col) {
             return P4Engine.this.play(col, this);
         }
 
