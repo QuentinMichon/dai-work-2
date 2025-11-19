@@ -41,10 +41,10 @@ public class P4Engine {
             if(nbPlayer == 1) {
                 return "";
             } else {
-                return players[1].name;
+                return players[1].getName();
             }
         } else if(player.id == 1) {
-            return players[0].name;
+            return players[0].getName();
         } else {
             return "";
         }
@@ -234,6 +234,18 @@ public class P4Engine {
 
         public String getOponentName() {
             return P4Engine.this.getOponentName(this);
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public char getSymbol() {
+            return symbol;
+        }
+
+        public int getId() {
+            return id;
         }
 
         @Override
