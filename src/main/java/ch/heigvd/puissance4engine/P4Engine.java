@@ -36,7 +36,7 @@ public class P4Engine {
         return nbPlayer;
     }
 
-    public String getOponentName(Player player) {
+    private String getOponentName(Player player) {
         if(player.id == 0) {
             if(nbPlayer == 1) {
                 return "";
@@ -230,6 +230,10 @@ public class P4Engine {
             if(nbPlayer > 1) {
                 nbPlayer--;
             }
+        }
+
+        public String getOponentName() {
+            return P4Engine.this.getOponentName(this);
         }
 
         @Override

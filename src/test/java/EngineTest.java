@@ -53,7 +53,7 @@ public class EngineTest {
             switch(status) {
                 case ACCEPTED:
                     System.out.println("[" + currentPlayer + "] Accepted");
-                    System.out.println("c'est le tour à " + p4Engine.getOponentName(currentPlayer));
+                    System.out.println("c'est le tour à " + currentPlayer.getOponentName());
 
                     if(playerTurn == 0) {
                         currentPlayer = player2;
