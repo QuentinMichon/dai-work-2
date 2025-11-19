@@ -8,9 +8,11 @@ public class P4Engine {
     static private final int MAX_ROW = 6;
 
     private final Pile[] table = new Pile[MAX_COL];
-
     private final int[] offset = {0, 1, 2, 3};
 
+    private int nbPlayer = 0;
+    private final char[] symbolUsers = {'X', 'O'};
+    private int playerTurn = 0;
 
     public P4Engine() {
         for (int i = 0; i < MAX_COL; i++) {
@@ -18,19 +20,13 @@ public class P4Engine {
         }
     }
 
-    public boolean play(int col, char symbol) {
-        return table[col].put(symbol);
-    }
-
-    @Override
-    public String toString() {
-        String tableString = "";
-        for (int i = 0; i < MAX_COL; i++) {
-            for (int j = 0; j < table[i].pile.length; j++) {
-                tableString += table[i].pile[j];
-            }
+    public Player newPlayer(String name) {
+        if(nbPlayer < 2) {
+            int id = nbPlayer++;
+            return new Player(symbolUsers[id], id, name);
+        } else {
+            return null;
         }
-        return tableString;
     }
 
     public boolean checkWin(char symbol) {
@@ -110,9 +106,30 @@ public class P4Engine {
         return false;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder tableString = new StringBuilder();
+        for (int i = 0; i < MAX_COL; i++) {
+            for (int j = 0; j < table[i].pile.length; j++) {
+                tableString.append(table[i].pile[j]);
+            }
+        }
+        return tableString.toString();
+    }
+
+    private boolean play(int col, Player player) {
+        if(player.id == playerTurn) {
+            boolean accepted = table[col].put(player.symbol);
+            if(accepted) {
+                playerTurn = (playerTurn + 1) % 2;
+                return true;
+            }
+        }
+        return false;
+    }
 
 
-
+    // Classe interne : Pile
     private static class Pile {
         private int height = 0;
         public char[] pile = new char[MAX_ROW];
@@ -132,6 +149,7 @@ public class P4Engine {
         }
     }
 
+    // Méthode static pour l'affichage coté client
     static public void displayTable(String tableString) {
 
         StringBuilder string = new StringBuilder();
@@ -161,5 +179,27 @@ public class P4Engine {
         }
 
         System.out.println(string);
+    }
+
+    // INNER CLASS PLAYER joue le role de remote
+    public class Player {
+        String name;
+        char symbol;
+        int id;
+
+        private Player(char symbol, int id, String name) {
+            this.symbol = symbol;
+            this.id = id;
+            this.name = name;
+        }
+
+        public boolean play(int col) {
+            return P4Engine.this.play(col, this);
+        }
+
+        @Override
+        public String toString() {
+            return this.name;
+        }
     }
 }
