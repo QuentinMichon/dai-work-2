@@ -154,6 +154,9 @@ public class P4Engine {
         return PlayStatus.NOT_YOUR_TURN;
     }
 
+    private synchronized int getTurn() {
+        return playerTurn;
+    }
 
     // Classe interne : Pile
     private static class Pile {
@@ -236,7 +239,7 @@ public class P4Engine {
             return P4Engine.this.getOponentName(this);
         }
 
-        public String getName() {
+        public synchronized String getName() {
             return name;
         }
 
@@ -246,6 +249,10 @@ public class P4Engine {
 
         public int getId() {
             return id;
+        }
+
+        public boolean isMyTurn() {
+            return getTurn() == this.id;
         }
 
         @Override
