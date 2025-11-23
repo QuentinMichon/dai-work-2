@@ -1,6 +1,7 @@
 package ch.heigvd.tcp;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
@@ -18,6 +19,22 @@ public class TcpClient {
     public TcpClient(String ip, int port) {
         this.port = port;
         this.ip = ip;
+    }
+
+    public String clientInfo() {
+        if (socket == null || socket.isClosed()) {
+            return "Aucun client connecté.";
+        }
+
+        StringBuilder info = new StringBuilder();
+
+        InetAddress addr = socket.getInetAddress();
+
+        info.append("Client IP : ").append(addr.getHostAddress()).append("\n");
+        info.append("Client Hostname : ").append(addr.getHostName()).append("\n");
+        info.append("Client Port : ").append(socket.getPort()).append("\n");
+
+        return info.toString();
     }
 
     public boolean connect() {
@@ -81,10 +98,21 @@ public class TcpClient {
         return "";
     }
 
+    public boolean isConnected() {
+        try {
+            out.write("ping");
+            out.flush();
+        } catch (IOException e) {
+            return false;
+        }
+        return true;
+    }
+
     public void close() {
         if (this.socket != null) {
             try {
                 this.socket.close();
+                System.out.println("[Client] Socket closed");
             } catch (IOException e) {
                 System.out.println("[Client] erreur lors de la fermeture du socket");
             }
@@ -92,6 +120,7 @@ public class TcpClient {
         if (this.in != null) {
             try {
                 this.in.close();
+                System.out.println("[Client] InputStream closed");
             } catch (IOException e) {
                 System.out.println("[Client] erreur lors de la fermeture du flux d'entrée");
             }
@@ -99,6 +128,7 @@ public class TcpClient {
         if (this.out != null) {
             try {
                 this.out.close();
+                System.out.println("[Client] OutputStream closed");
             } catch (IOException e) {
                 System.out.println("[Client] erreur lors de la fermeture du flux de sortie");
             }

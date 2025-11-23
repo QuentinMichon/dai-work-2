@@ -7,30 +7,30 @@ import java.nio.charset.StandardCharsets;
 
 public class TcpServeur {
     private Socket socket = null;
-    private ServerSocket serverSocket = null;
     private BufferedReader in = null;
     private BufferedWriter out = null;
+    private boolean isClientConnected = false;
 
-    private final int port;
-
-    public TcpServeur(int port) {
-        this.port = port;
+    public TcpServeur(Socket socket) {
+        this.socket = socket;
     }
 
-    public boolean up() {
-
-        // ---|Connexion serveur|--------------------------
+    public boolean haveClientRequest() {
+        int availabe = 0;
         try {
-            this.serverSocket = new ServerSocket(this.port);
-            System.out.println("[Serveur] écoute le port " + this.port);
-            System.out.println("[Serveur] En attente de connexion...");
-            this.socket = serverSocket.accept(); // attend une connexion
-        } catch (IOException e) {
-            System.out.println("[Serveur] Erreur de connexion");
-            this.close();
+            availabe = this.socket.getInputStream().available();
+            return (availabe > 0);
+        } catch(IOException e) {
+            System.out.println("Erreur de lecture du client");
             return false;
         }
+    }
 
+    public boolean isClientConnected() {
+        return isClientConnected;
+    }
+
+    public boolean connect() {
         // ---|Ouverture du BufStream input|-----------------
         try {
             Reader reader = new InputStreamReader(this.socket.getInputStream(), StandardCharsets.UTF_8);
@@ -53,6 +53,7 @@ public class TcpServeur {
             return false;
         }
 
+        isClientConnected = true;
         return true;
     }
 
@@ -62,9 +63,11 @@ public class TcpServeur {
                 this.out.write(cmd + "\n");
                 this.out.flush();
             } catch (IOException e) {
+                isClientConnected = false;
                 System.out.println("[Serveur] Erreur lors de l'envoie de la commande : " + cmd);
             }
         } else {
+            isClientConnected = false;
             System.out.println("[Serveur] Stream output non connecté : impossible d'envoyer une requête");
         }
     }
@@ -74,6 +77,7 @@ public class TcpServeur {
             try {
                 return this.in.readLine();
             } catch (IOException e) {
+                isClientConnected = false;
                 System.out.println("[Serveur] Impossible de lire le client");
             }
         }
@@ -102,5 +106,6 @@ public class TcpServeur {
                 System.out.println("[Serveur] erreur lors de la fermeture du flux de sortie");
             }
         }
+        isClientConnected = false;
     }
 }

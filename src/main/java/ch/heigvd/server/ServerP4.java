@@ -1,0 +1,264 @@
+package ch.heigvd.server;
+
+import ch.heigvd.puissance4engine.EndOfGameStatus;
+import ch.heigvd.puissance4engine.P4Engine;
+import ch.heigvd.puissance4engine.PlayStatus;
+import ch.heigvd.tcp.TcpServeur;
+
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+
+public class ServerP4 {
+
+    Thread threadPlayer1 = null;
+    Thread threadPlayer2 = null;
+    // variable partagée
+    private static Semaphore synchro = new Semaphore(0);
+    private static AtomicReference<P4Engine> engine = new AtomicReference<>(new P4Engine()); // moteur de jeu unique (1 partie possible)
+    private final AtomicBoolean endOfGame = new AtomicBoolean(false);
+
+    public void start() {
+        try (ServerSocket serverSocket = new ServerSocket(4444)) {
+            System.out.println("[Server p4] started");
+            System.out.println("[Server p4] listening on port " + 4444);
+
+            while (!serverSocket.isClosed()) {
+                Socket clientSocket = serverSocket.accept();  // bloquant
+
+                int nbPlayer = engine.get().getNbPlayer();
+                switch (nbPlayer) {
+                    case 0:
+                        engine = new AtomicReference<>(new P4Engine()); // nouveau engine (reset pour nouvelle partie)
+                        endOfGame.set(false); // reset le endOfGame
+                        synchro = new Semaphore(0);
+
+                        threadPlayer1 = new Thread(new ClientHandler(clientSocket, engine.get().newPlayer(), this.endOfGame));
+                        threadPlayer1.start();
+                        break;
+                    case 1:
+                        threadPlayer2 = new Thread(new ClientHandler(clientSocket, engine.get().newPlayer(), this.endOfGame));
+                        threadPlayer2.start();
+                        break;
+                    default:
+                        TcpServeur tcpServeur = new TcpServeur(clientSocket);
+                        tcpServeur.connect();
+                        tcpServeur.send("GAME ALREADY STARTED");
+                        tcpServeur.close();
+                        break;
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("[Server p4] exception: " + e);
+        }
+    }
+
+    static class ClientHandler implements Runnable {
+        private final TcpServeur tcp;
+        private final P4Engine.Player player;
+        private final AtomicBoolean endOfGame;
+
+        public ClientHandler(Socket clientSocket, P4Engine.Player player, AtomicBoolean endOfGame) {
+            this.tcp = new TcpServeur(clientSocket);
+            this.player = player;
+            this.endOfGame = endOfGame;
+        }
+
+        @Override
+        public void run() {
+            String cmd = "";
+            boolean playerJoined = false;
+
+            tcp.connect();  // connecte les flux entrée/sortie avec le client
+
+            // -------- Partie JOIN -----------------------------------------
+            while(player.getName().isEmpty()) {
+
+                cmd = tcp.receive();
+
+                if (cmd == null) {
+                    // connexion fermée par le client
+                    synchro.release();
+                    break;
+                } else {
+                    List<String> messageParts = Arrays.asList(cmd.split(" ", 2));
+                    if(messageParts.size() < 2) {
+                        tcp.send("UNKNOWN");
+                        continue;
+                    }
+
+                    String header = messageParts.get(0);
+                    List<String> params = Arrays.asList(messageParts.get(1).split(" "));
+
+                    if (header.equals("JOIN")) {
+                        if (params.size() != 1) {
+                            tcp.send("UNKNOWN");
+                        } else {
+                            String name = params.getFirst();
+
+                            if (!player.getOponentName().isEmpty()) {
+                                if (player.getOponentName().equals(name)) {
+                                    tcp.send("NOK");
+                                    continue;
+                                } else {
+                                    player.setName(name);
+                                    tcp.send("OK");
+                                    // débloquer le joueur en attente
+                                    synchro.release();
+                                    tcp.send("START " + player.getOponentName() + " " + player.getSymbol());
+                                }
+                            } else {
+                                player.setName(name);
+                                tcp.send("OK");
+
+                                try {
+                                    // bloquer le joueur en attente d'un autre
+                                    synchro.acquire();
+                                } catch (InterruptedException e) {
+                                    System.out.println("[Server p4] interrupted" + e.getMessage());
+                                }
+                                tcp.send("START " + player.getOponentName() + " " + player.getSymbol());
+                            }
+                        }
+                    } else {
+                        tcp.send("UNKNOWN");
+                    }
+                }
+            }
+
+            // -------- Partie AFTER START -----------------------------------------
+
+            boolean playValid = false;
+            EndOfGameStatus endOfGameStatus = EndOfGameStatus.LOOSE;
+
+            while (!endOfGame.get()) {
+                if(player.isMyTurn()) {
+                    playValid = false;
+                    String table = engine.get().toString();
+                    tcp.send("TURN " + table);
+
+                    while (!playValid) {
+                        cmd = tcp.receive();
+                        if (cmd == null || !tcp.isClientConnected()) {
+                            System.out.println("[Server p4] player " + player + " is disconnected");
+                            endOfGame.set(true); // met fin à la partie
+                            player.disconnect(); // se déconnecte et passe la main à l'autre joueur
+                            synchro.release(); // relache la barrière de synchro
+                            tcp.close();
+                            System.out.println("[Server p4] player " + player + " disconnected during the game");
+                            return; // fin de la session du joueur
+
+                        } else {
+                            // décodage de la commande
+                            System.out.println("[Server p4] player " + player + " cmd : " + cmd);
+
+                            List<String> messageParts = Arrays.asList(cmd.split(" ", 2));
+
+                            if(messageParts.size() < 2) {
+                                tcp.send("UNKNOWN");
+                                continue;
+                            }
+
+                            String header = messageParts.get(0);
+                            List<String> params = Arrays.asList(messageParts.get(1).split(" "));
+
+                            if (!header.equals("PLAY")) {
+                                tcp.send("UNKNOWN");
+                                continue;
+                            }
+
+                            if(params.size() != 1) {
+                                tcp.send("UNKNOWN");
+                                continue;
+                            }
+
+                            if (!isInteger(params.getFirst())) {
+                                tcp.send("UNKNOWN");
+                                continue;
+                            }
+
+                            int col = Integer.parseInt(params.getFirst());
+                            PlayStatus status = player.play(col);
+
+                            switch (status) {
+                                case COLUMN_FULL:
+                                    tcp.send("FULL");
+                                    break;
+                                case NOT_YOUR_TURN:
+                                    tcp.send("NOT_YOUR_TURN");
+                                    break;
+                                case OUT_OF_RANGE:
+                                    // pas encore de commande de retour
+                                    tcp.send("OUT_OF_RANGE");
+                                    break;
+                                case ACCEPTED:
+                                    table = engine.get().toString();
+                                    tcp.send("MOVE_OK " + table);
+                                    playValid = true;
+                                    break;
+                            }
+
+                            endOfGameStatus = engine.get().checkWin(player.getSymbol());
+                            if(endOfGameStatus != EndOfGameStatus.LOOSE) { // LOOSE est le status par défaut
+                                endOfGame.set(true);
+                            }
+                            synchro.release();
+                        }
+                    }
+
+                } else {
+                    // SLOT d'attente si ce n'est plus le tour du joueur
+                    while(!player.isMyTurn()) {
+                        if(tcp.haveClientRequest()) {
+                            tcp.receive();
+                            tcp.send("NOT_YOUR_TURN");
+                        }
+                    }
+                    try {
+                        synchro.acquire();
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+
+
+            endOfGameStatus = engine.get().checkWin(player.getSymbol());
+
+            switch (endOfGameStatus) {
+                case LOOSE:
+                    tcp.send("LOOSE");
+                    break;
+                case WIN:
+                    tcp.send("WIN");
+                    break;
+                case FORFEIT:
+                    tcp.send("FORFEIT");
+                    break;
+                case DRAW:
+                    tcp.send("DRAW");
+                    break;
+            }
+
+
+
+            player.disconnect();
+            tcp.close();
+            System.out.println("[engine] " + engine.get().getNbPlayer());
+        }
+    }
+
+    private static boolean isInteger(String s) {
+        try {
+            Integer.parseInt(s);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+}

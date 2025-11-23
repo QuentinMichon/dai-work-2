@@ -1,3 +1,4 @@
+import ch.heigvd.puissance4engine.EndOfGameStatus;
 import ch.heigvd.puissance4engine.P4Engine;
 import ch.heigvd.puissance4engine.PlayStatus;
 
@@ -41,7 +42,7 @@ public class EngineTest {
 
         currentPlayer = player1;
 
-        while(!p4Engine.checkWin(symbols[playerTurn])) {
+        while(p4Engine.checkWin(symbols[playerTurn]) != EndOfGameStatus.LOOSE) {
             P4Engine.displayTable(p4Engine.toString());
 
             System.out.println("[" + symbols[playerTurn] + "] Select a column");
