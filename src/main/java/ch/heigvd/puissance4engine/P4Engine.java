@@ -32,11 +32,11 @@ public class P4Engine {
         }
     }
 
-    public int getNbPlayer() {
+    public synchronized int getNbPlayer() {
         return nbPlayer;
     }
 
-    private String getOponentName(Player player) {
+    private synchronized String getOponentName(Player player) {
         if(player.id == 0) {
             if(nbPlayer == 1) {
                 return "";
@@ -50,7 +50,22 @@ public class P4Engine {
         }
     }
 
-    public boolean checkWin(char symbol) {
+    public synchronized EndOfGameStatus checkWin(char symbol) {
+        if(nbPlayer == 1) {
+            return EndOfGameStatus.FORFEIT;
+        }
+
+        boolean tableFull = true;
+        for(int i=0; i<MAX_COL; i++) {
+            if(!table[i].isFull()) {
+                tableFull = false;
+                break;
+            }
+        }
+        if(tableFull) {
+            return EndOfGameStatus.DRAW;
+        }
+
         int suite = 0;
 
         // check |
@@ -67,7 +82,7 @@ public class P4Engine {
                     }
                 }
 
-                if(suite == 4) { return true; }
+                if(suite == 4) { return EndOfGameStatus.WIN; }
             }
         }
 
@@ -85,7 +100,7 @@ public class P4Engine {
                     }
                 }
 
-                if(suite == 4) { return true; }
+                if(suite == 4) { return EndOfGameStatus.WIN; }
             }
         }
 
@@ -103,7 +118,7 @@ public class P4Engine {
                     }
                 }
 
-                if(suite == 4) { return true; }
+                if(suite == 4) { return EndOfGameStatus.WIN; }
             }
         }
 
@@ -120,11 +135,11 @@ public class P4Engine {
                     }
                 }
 
-                if(suite == 4) { return true; }
+                if(suite == 4) { return EndOfGameStatus.WIN; }
             }
         }
 
-        return false;
+        return EndOfGameStatus.LOOSE;
     }
 
     @Override
@@ -138,7 +153,7 @@ public class P4Engine {
         return tableString.toString();
     }
 
-    private PlayStatus play(int col, Player player) {
+    private synchronized PlayStatus play(int col, Player player) {
         if(player.id == playerTurn) {
             if(col < 0 || col >= MAX_COL) {
                 return PlayStatus.OUT_OF_RANGE;
@@ -161,7 +176,7 @@ public class P4Engine {
     // Classe interne : Pile
     private static class Pile {
         private int height = 0;
-        public char[] pile = new char[MAX_ROW];
+        private char[] pile = new char[MAX_ROW];
 
         public Pile() {
             Arrays.fill(pile, '-');
@@ -175,6 +190,10 @@ public class P4Engine {
             pile[this.height] = symbol;
             this.height++;
             return PlayStatus.ACCEPTED;
+        }
+
+        public boolean isFull() {
+            return height == MAX_ROW;
         }
     }
 
@@ -221,7 +240,7 @@ public class P4Engine {
             this.id = id;
         }
 
-        public void setName(String name) {
+        public synchronized void setName(String name) {
             this.name = name;
         }
 
@@ -229,13 +248,14 @@ public class P4Engine {
             return P4Engine.this.play(col, this);
         }
 
-        public void disconnect() {
-            if(nbPlayer > 1) {
+        public synchronized void disconnect() {
+            if(nbPlayer > 0) {
                 nbPlayer--;
             }
+            playerTurn = (playerTurn + 1) % 2;
         }
 
-        public String getOponentName() {
+        public synchronized String getOponentName() {
             return P4Engine.this.getOponentName(this);
         }
 

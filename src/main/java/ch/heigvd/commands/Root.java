@@ -7,6 +7,7 @@
 
 package ch.heigvd.commands;
 
+import ch.heigvd.server.ServerP4;
 import ch.heigvd.tcp.TcpServeur;
 import ch.heigvd.tcp.TcpClient;
 import picocli.CommandLine;
@@ -15,6 +16,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
 @CommandLine.Command(
@@ -46,16 +49,20 @@ public class Root implements Runnable {
     //------------------------- SERVEUR -------------------------------------------------------------------------
     private void lancement_serveur() {
         System.out.println("Lancement du serveur...");
-        TcpServeur serveur = new TcpServeur(4444);
-        serveur.up();
 
-        String request = "";
-        while(!request.equals("STOP")) {
-            request = serveur.receive();
-            System.out.println("[Serveur] : request from client : " + request);
-        }
+        ServerP4 serverP4 = new ServerP4();
+        serverP4.start();
 
-        serveur.close();
+//        TcpServeur serveur = new TcpServeur(4444);
+//        serveur.up();
+//
+//        String request = "";
+//        while(!request.equals("STOP")) {
+//            request = serveur.receive();
+//            System.out.println("[Serveur] : request from client : " + request);
+//        }
+//
+//        serveur.close();
     }
 
     //------------------------- CLIENT -------------------------------------------------------------------------
@@ -69,13 +76,41 @@ public class Root implements Runnable {
              BufferedReader userIn = new BufferedReader(systemInReader))
         {
             String cmd = "";
+            String ret = "";
 
-            while (!cmd.equals("STOP")) {
+            while (!ret.equals("OK")) {
                 System.out.print("> ");
                 cmd = userIn.readLine();
                 client.send(cmd);
+                ret = client.receive();
+                if (ret == null) {
+                    client.close();
+                    System.out.println("[Client] server down");
+                    return;
+                }
+                System.out.println(ret);
             }
 
+            ret = client.receive();
+            System.out.println(ret);
+
+            ret = client.receive();
+            System.out.println(ret);
+
+            while (!ret.equals("WIN")) {
+                System.out.print("> ");
+                cmd = userIn.readLine();
+                client.send(cmd);
+                ret = client.receive();
+                if (ret == null) {
+                    client.close();
+                    System.out.println("[Client] server down");
+                    return;
+                }
+                System.out.println(ret);
+            }
+
+            client.close();
         } catch(IOException e) {
             System.out.println("An error occurred.");
         }
@@ -83,5 +118,20 @@ public class Root implements Runnable {
 
     private enum TYPE {
         CLIENT, SERVER
+    }
+
+    static class ClientHandler implements Runnable {
+        private final TcpServeur serveur;
+
+        public ClientHandler(TcpServeur serveur, boolean stopper) {
+            this.serveur = serveur;
+        }
+
+        @Override
+        public void run() {
+            serveur.connect();
+            System.out.println(serveur.receive());
+            serveur.close();
+        }
     }
 }
