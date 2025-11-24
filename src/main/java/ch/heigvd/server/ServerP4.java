@@ -50,7 +50,8 @@ public class ServerP4 {
                     default:
                         TcpServeur tcpServeur = new TcpServeur(clientSocket);
                         tcpServeur.connect();
-                        tcpServeur.send("GAME ALREADY STARTED");
+                        tcpServeur.receive();
+                        tcpServeur.send("GAME_NOT_FREE");
                         tcpServeur.close();
                         break;
                 }

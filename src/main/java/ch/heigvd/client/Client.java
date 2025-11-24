@@ -52,6 +52,12 @@ public class Client {
                     System.out.println("[Client] server closed the connection");
                     return;
                 }
+
+                if(cmd.equals("GAME_NOT_FREE")) {
+                    System.out.println("The server is full, please try later...");
+                    tcpClient.close();
+                    return;
+                }
             }
             // partie START
             System.out.println("Waiting an opponent...");
@@ -134,7 +140,7 @@ public class Client {
                         int col = Integer.parseInt(userInput) - 1;
                         tcpClient.send("PLAY " + col);
                     } else {
-                        System.out.println("You have entered an invalid column\nSelect a column ("+ symbol +"): ");
+                        System.out.print("You have entered an invalid column\nSelect a column ("+ symbol +"): ");
                         continue;
                     }
 
