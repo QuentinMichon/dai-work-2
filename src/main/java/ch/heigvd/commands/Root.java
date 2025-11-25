@@ -7,6 +7,7 @@
 
 package ch.heigvd.commands;
 
+import ch.heigvd.client.Client;
 import ch.heigvd.server.ServerP4;
 import ch.heigvd.tcp.TcpServeur;
 import ch.heigvd.tcp.TcpClient;
@@ -52,67 +53,16 @@ public class Root implements Runnable {
 
         ServerP4 serverP4 = new ServerP4();
         serverP4.start();
-
-//        TcpServeur serveur = new TcpServeur(4444);
-//        serveur.up();
-//
-//        String request = "";
-//        while(!request.equals("STOP")) {
-//            request = serveur.receive();
-//            System.out.println("[Serveur] : request from client : " + request);
-//        }
-//
-//        serveur.close();
     }
 
     //------------------------- CLIENT -------------------------------------------------------------------------
 
     private void lancement_client() {
         System.out.println("Lancement du client...");
-        TcpClient client = new TcpClient("localhost", 4444);
-        client.connect();
 
-        try (Reader systemInReader = new InputStreamReader(System.in, StandardCharsets.UTF_8);
-             BufferedReader userIn = new BufferedReader(systemInReader))
-        {
-            String cmd = "";
-            String ret = "";
-
-            while (!ret.equals("OK")) {
-                System.out.print("> ");
-                cmd = userIn.readLine();
-                client.send(cmd);
-                ret = client.receive();
-                if (ret == null) {
-                    client.close();
-                    System.out.println("[Client] server down");
-                    return;
-                }
-                System.out.println(ret);
-            }
-
-            ret = client.receive();
-            System.out.println(ret);
-
-            ret = client.receive();
-            System.out.println(ret);
-
-            while (!ret.equals("WIN")) {
-                System.out.print("> ");
-                cmd = userIn.readLine();
-                client.send(cmd);
-                ret = client.receive();
-                if (ret == null) {
-                    client.close();
-                    System.out.println("[Client] server down");
-                    return;
-                }
-                System.out.println(ret);
-            }
-
-            client.close();
-        } catch(IOException e) {
-            System.out.println("An error occurred.");
+        Client client = new Client();
+        if(client.connect()) {
+            client.run();
         }
     }
 
