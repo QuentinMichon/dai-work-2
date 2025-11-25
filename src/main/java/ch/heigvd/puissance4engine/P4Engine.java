@@ -1,6 +1,7 @@
 package ch.heigvd.puissance4engine;
 
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class P4Engine {
 
@@ -10,7 +11,7 @@ public class P4Engine {
     private final Pile[] table = new Pile[MAX_COL];
     private final int[] offset = {0, 1, 2, 3};
 
-    private int nbPlayer = 0;
+    private AtomicInteger nbPlayer;
     private final char[] symbolUsers = {'X', 'O'};
     private int playerTurn = 0;
 
@@ -20,11 +21,12 @@ public class P4Engine {
         for (int i = 0; i < MAX_COL; i++) {
             table[i] = new Pile();
         }
+        nbPlayer = new AtomicInteger(0);
     }
 
     public Player newPlayer() {
-        if(nbPlayer < 2) {
-            int id = nbPlayer++;
+        if(nbPlayer.get() < 2) {
+            int id = nbPlayer.incrementAndGet();
             players[id] = new Player(symbolUsers[id], id);
             return players[id];
         } else {
@@ -33,12 +35,12 @@ public class P4Engine {
     }
 
     public synchronized int getNbPlayer() {
-        return nbPlayer;
+        return nbPlayer.get();
     }
 
     private synchronized String getOponentName(Player player) {
         if(player.id == 0) {
-            if(nbPlayer == 1) {
+            if(nbPlayer.get() == 1) {
                 return "";
             } else {
                 return players[1].getName();
@@ -51,7 +53,7 @@ public class P4Engine {
     }
 
     public synchronized EndOfGameStatus checkWin(char symbol) {
-        if(nbPlayer == 1) {
+        if(nbPlayer.get() == 1) {
             return EndOfGameStatus.FORFEIT;
         }
 
@@ -249,8 +251,8 @@ public class P4Engine {
         }
 
         public synchronized void disconnect() {
-            if(nbPlayer > 0) {
-                nbPlayer--;
+            if(nbPlayer.get() > 0) {
+                nbPlayer.decrementAndGet();
             }
             playerTurn = (playerTurn + 1) % 2;
         }
