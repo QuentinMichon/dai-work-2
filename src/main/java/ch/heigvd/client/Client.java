@@ -180,6 +180,10 @@ public class Client {
 
                             P4Engine.displayTable(tokens.getFirst());
                             valid_col = true;
+                        default:
+                            tcpClient.close();
+                            System.out.println("Server send an invalid command");
+                            return;
                     }
                 }
 
@@ -199,6 +203,10 @@ public class Client {
                 case "FORFEIT":
                     System.out.println("You won by forfeit !!!");
                     break;
+                default:
+                    tcpClient.close();
+                    System.out.println("Server send an invalid command");
+                    return;
             }
 
             tcpClient.close();
