@@ -6,6 +6,30 @@
 ## Protocole
 La description du protocol applicatif est disponible [ici](protocol/README.md)
 
+## Docker
+Pour unifier l'environnement de développement et d'exécution, un Dockerfile a été mis en place afin que le client et 
+le serveur puissent être exécutés dans des containers. Ceux-ci communiquent entre eux via un réseau Docker, que vous devrez démarrer manuellement. 
+Veuillez suivre les étapes ci-dessous dans l'ordre pour configurer correctement l'environnement.
+
+> [!CAUTION]
+> Vous devez absolument avoir le fichier .jar du projet comme ceci target/dai-work-2-1.0-SNAPSHOT.jar
+> 
+
+> [!CAUTION]
+> Vous devez avoir Docker déjà installé sur votre machine.
+> [Lien d'installation officiel](https://docs.docker.com/engine/install/)
+> 
+
+#### Lancement du réseau
+
+```bash
+# création du réseau docker
+docker network create p4network
+```
+Vous pouvez utiliser n'importe quel nom pour le réseau. 
+
+
+
 ## Auteurs
 - [Quentin Michon](https://github.com/QuentinMichon)
 - [Gianni Bee](https://github.com/GinByte)
