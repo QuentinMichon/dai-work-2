@@ -20,6 +20,8 @@ public class ServerP4 {
     Thread threadPlayer2 = null;
     // variable partagée
     private static Semaphore synchro = new Semaphore(0);
+    private Semaphore player1end = new Semaphore(0);
+    private Semaphore player2end = new Semaphore(0);
     private static AtomicReference<P4Engine> engine = new AtomicReference<>(new P4Engine()); // moteur de jeu unique (1 partie possible)
     private final AtomicBoolean endOfGame = new AtomicBoolean(false);
 
@@ -38,17 +40,18 @@ public class ServerP4 {
                         endOfGame.set(false); // reset le endOfGame
                         synchro = new Semaphore(0);
 
-                        threadPlayer1 = new Thread(new ClientHandler(clientSocket, engine.get().newPlayer(), this.endOfGame));
+                        threadPlayer1 = new Thread(new ClientHandler(clientSocket, engine.get().newPlayer(), this.endOfGame, player1end, player2end));
                         threadPlayer1.start();
                         break;
                     case 1:
-                        threadPlayer2 = new Thread(new ClientHandler(clientSocket, engine.get().newPlayer(), this.endOfGame));
+                        threadPlayer2 = new Thread(new ClientHandler(clientSocket, engine.get().newPlayer(), this.endOfGame, player2end, player1end));
                         threadPlayer2.start();
                         break;
                     default:
                         TcpServeur tcpServeur = new TcpServeur(clientSocket);
                         tcpServeur.connect();
-                        tcpServeur.send("GAME ALREADY STARTED");
+                        tcpServeur.receive();
+                        tcpServeur.send("GAME_NOT_FREE");
                         tcpServeur.close();
                         break;
                 }
@@ -62,11 +65,15 @@ public class ServerP4 {
         private final TcpServeur tcp;
         private final P4Engine.Player player;
         private final AtomicBoolean endOfGame;
+        private final Semaphore thisPlayerEnd;
+        private final Semaphore otherPlayerEnd;
 
-        public ClientHandler(Socket clientSocket, P4Engine.Player player, AtomicBoolean endOfGame) {
+        public ClientHandler(Socket clientSocket, P4Engine.Player player, AtomicBoolean endOfGame, Semaphore thisPlayerEnd, Semaphore otherPlayerEnd) {
             this.tcp = new TcpServeur(clientSocket);
             this.player = player;
             this.endOfGame = endOfGame;
+            this.thisPlayerEnd = thisPlayerEnd;
+            this.otherPlayerEnd = otherPlayerEnd;
         }
 
         @Override
@@ -149,6 +156,7 @@ public class ServerP4 {
                             endOfGame.set(true); // met fin à la partie
                             player.disconnect(); // se déconnecte et passe la main à l'autre joueur
                             synchro.release(); // relache la barrière de synchro
+                            thisPlayerEnd.release(); // relache la barrière de synchro de fin
                             tcp.close();
                             System.out.println("[Server p4] player " + player + " disconnected during the game");
                             return; // fin de la session du joueur
@@ -229,6 +237,14 @@ public class ServerP4 {
 
 
             endOfGameStatus = engine.get().checkWin(player.getSymbol());
+
+            // point de rencontre
+            thisPlayerEnd.release();
+            try {
+                otherPlayerEnd.acquire();
+            } catch (InterruptedException e) {
+                System.out.println("[Server p4] synchro impossible");
+            }
 
             switch (endOfGameStatus) {
                 case LOOSE:
