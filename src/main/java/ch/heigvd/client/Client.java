@@ -20,8 +20,8 @@ public class Client {
     private TcpClient tcpClient;
     private boolean running = false;
 
-    public Client() {
-        tcpClient = new TcpClient("localhost", 4444);
+    public Client(String hostname) {
+        tcpClient = new TcpClient(hostname, 4444);
     }
 
     public boolean connect() {
@@ -180,6 +180,7 @@ public class Client {
 
                             P4Engine.displayTable(tokens.getFirst());
                             valid_col = true;
+                            break;
                         default:
                             tcpClient.close();
                             System.out.println("Server send an invalid command");

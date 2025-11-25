@@ -47,6 +47,13 @@ public class Root implements Runnable {
     @CommandLine.Parameters(index = "0", description = "choisir de lancer un serveur ou un client")
     protected TYPE type;
 
+    @CommandLine.Option(
+            names = {"-", "--hostname"},
+            description = "Hostname used by the client to contact the server",
+            defaultValue = "localhost"
+    )
+    protected String hostname;
+
     //------------------------- SERVEUR -------------------------------------------------------------------------
     private void lancement_serveur() {
         System.out.println("Lancement du serveur...");
@@ -60,7 +67,7 @@ public class Root implements Runnable {
     private void lancement_client() {
         System.out.println("Lancement du client...");
 
-        Client client = new Client();
+        Client client = new Client(hostname);
         if(client.connect()) {
             client.run();
         }
