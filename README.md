@@ -36,18 +36,25 @@ Vous pouvez utiliser n'importe quel nom pour le réseau.
 #### Lancement du serveur
 
 ```bash
+#Lancement du serveur en arrière plan
 docker run -d --network p4network --name server-p4 p4app:latest
 ```
 Le nom du serveur sera utilisé par le client dans l'option `--hostame`.
 Vous pouvez voir les logs avec la commande suivante :
 ```bash
-docker logs -f server-4
+# affiche les logs du serveur dans le terminal
+docker logs -f server-p4
 ```
 
 #### Lancement d'un client en mode itrératif 
 
 ```bash
+# lance le client 1
 docker run -it --rm --network p4network --name client1 p4app:latest CLIENT --hostname=server-p4
+```
+```bash
+# lance le client 2
+docker run -it --rm --network p4network --name client2 p4app:latest CLIENT --hostname=server-p4
 ```
 Assurez-vous d’utiliser le nom correct du réseau pour l’option `--network`, ainsi que le nom du serveur défini précédemment pour l’option `--hostname`.
 Et faite attention à ne pas utiliser deux fois le même nom de client pour l'option `--name`.
