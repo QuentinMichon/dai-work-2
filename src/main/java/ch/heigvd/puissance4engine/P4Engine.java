@@ -26,7 +26,7 @@ public class P4Engine {
 
     public Player newPlayer() {
         if(nbPlayer.get() < 2) {
-            int id = nbPlayer.incrementAndGet();
+            int id = nbPlayer.getAndIncrement();
             players[id] = new Player(symbolUsers[id], id);
             return players[id];
         } else {
