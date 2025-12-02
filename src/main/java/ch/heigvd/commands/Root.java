@@ -10,16 +10,7 @@ package ch.heigvd.commands;
 import ch.heigvd.client.Client;
 import ch.heigvd.server.ServerP4;
 import ch.heigvd.tcp.TcpServeur;
-import ch.heigvd.tcp.TcpClient;
 import picocli.CommandLine;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 
 @CommandLine.Command(
         description = "Lancement d'un serveur ou client pour jouer au Puissance 4",
