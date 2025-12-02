@@ -37,6 +37,7 @@ JOIN <userName>
 #### Réponse
 - `OK`: le client est enregistré avec ce nom et est placé en liste d'attente
 - `NOK`: indique que le nom d'utilisateur est déjà pris par l'autre joueur
+- `UNKNOWN` : indique de la commande n'est pas reconnu
 
 ### Lancer une partie
 
@@ -92,6 +93,8 @@ PLAY <colonne>
 - `MOVE_OK <table>`: indique que le coup est valide et retourne le nouvel état du tableau de jeu. (même format que pour la requête `TURN <table>`)
 - `FULL`: indique que le coup joué est illicite (colonne pleine)
 - `NOT_YOUR_TURN`: indique que ce n'est pas le tour du Client
+- `OUT_OF_RANGE` : indique que la position de la colonne est hors [1;7]
+- `UNKNOWN` : indique que la commande n'a pas été reconnue
 
 ### Fin de partie
 
