@@ -20,14 +20,37 @@ public class Client {
     private TcpClient tcpClient;
     private boolean running = false;
 
+    /**
+     * Creates a new client instance that will attempt to connect to the game server
+     * running on the specified hostname using TCP port 4444.
+     *
+     * @param hostname the hostname or IP address of the server to connect to
+     */
     public Client(String hostname) {
         tcpClient = new TcpClient(hostname, 4444);
     }
 
+    /**
+     * Attempts to establish the TCP connection to the server.
+     *
+     * @return true if the connection succeeds, false otherwise
+     */
     public boolean connect() {
         return tcpClient.connect();
     }
 
+    /**
+     * Main loop of the Puissance 4 client.
+     * <p>
+     * Handles the following phases:
+     * <ul>
+     *   <li>JOIN: sends the player's name and waits for server validation</li>
+     *   <li>START: receives assignment of opponent name and symbol</li>
+     *   <li>GAME LOOP: waits for server commands, displays the board, and sends player moves</li>
+     *   <li>END OF GAME: displays the result received from the server</li>
+     * </ul>
+     * Manages user input, server communication, and game state until the session ends.
+     */
     public void run() {
         running = true;
         String cmd = "";

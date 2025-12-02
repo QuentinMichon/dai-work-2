@@ -14,17 +14,49 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Main TCP server for hosting a single Puissance 4 (Connect Four) match.
+ * <p>
+ * The server accepts up to two players. When the first player connects,
+ * a new game engine is created. When both players have joined with valid
+ * names, the match begins. Communication follows a simple text protocol.
+ * <p>
+ * Synchronization between the two players is handled through semaphores,
+ * allowing strict turn-based interactions.
+ */
 public class ServerP4 {
 
     Thread threadPlayer1 = null;
     Thread threadPlayer2 = null;
-    // variable partagée
+    /**
+     * Global synchronization barrier used between players
+     * (turn changes, connection events…).
+     */
     private static Semaphore synchro = new Semaphore(0);
+    /**
+     * Barrier used to synchronize end-of-game messages for player 1.
+     */
     private Semaphore player1end = new Semaphore(0);
+    /**
+     * Barrier used to synchronize end-of-game messages for player 2.
+     */
     private Semaphore player2end = new Semaphore(0);
+    /**
+     * Reference to the unique P4 game engine instance.
+     * Reset each time a new match starts.
+     */
     private static AtomicReference<P4Engine> engine = new AtomicReference<>(new P4Engine()); // moteur de jeu unique (1 partie possible)
+    /**
+     * Indicates whether the match is over.
+     */
     private final AtomicBoolean endOfGame = new AtomicBoolean(false);
 
+    /**
+     * Starts the server on TCP port 4444.
+     * <p>
+     * Accepts incoming clients, assigns them to a player slot,
+     * and launches a corresponding ClientHandler thread.
+     */
     public void start() {
         try (ServerSocket serverSocket = new ServerSocket(4444)) {
             System.out.println("[Server p4] started");
@@ -61,13 +93,47 @@ public class ServerP4 {
         }
     }
 
+    /**
+     * Handles the full session for a single connected player.
+     * <p>
+     * This includes:
+     * - processing JOIN command
+     * - waiting for game start
+     * - handling turn-based PLAY commands
+     * - sending MOVE_OK, TURN, WIN/LOSE/DRAW/FORFEIT
+     * - managing disconnections
+     */
     static class ClientHandler implements Runnable {
+        /**
+         * TCP communication wrapper for this player's socket.
+         */
         private final TcpServeur tcp;
+        /**
+         * P4Engine Player instance representing this client.
+         */
         private final P4Engine.Player player;
+        /**
+         * Shared flag indicating whether the game has ended.
+         */
         private final AtomicBoolean endOfGame;
+        /**
+         * Semaphore the player waits on at the end of the game.
+         */
         private final Semaphore thisPlayerEnd;
+        /**
+         * Semaphore released by the opponent when they finish.
+         */
         private final Semaphore otherPlayerEnd;
 
+        /**
+         * Creates a new client handler thread.
+         *
+         * @param clientSocket the socket connected to the client
+         * @param player the game engine's Player object
+         * @param endOfGame shared end-of-game flag
+         * @param thisPlayerEnd synchronization barrier for this player
+         * @param otherPlayerEnd synchronization barrier for the opponent
+         */
         public ClientHandler(Socket clientSocket, P4Engine.Player player, AtomicBoolean endOfGame, Semaphore thisPlayerEnd, Semaphore otherPlayerEnd) {
             this.tcp = new TcpServeur(clientSocket);
             this.player = player;
@@ -269,6 +335,12 @@ public class ServerP4 {
         }
     }
 
+    /**
+     * Utility method to check if a string contains a valid integer.
+     *
+     * @param s the input string
+     * @return true if the string is a valid integer
+     */
     private static boolean isInteger(String s) {
         try {
             Integer.parseInt(s);
