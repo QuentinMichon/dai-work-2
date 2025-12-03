@@ -4,7 +4,7 @@
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <option name="MAIN_CLASS_NAME" value="ch.heigvd.Main" />
     <module name="dai-work-2" />
-    <option name="PROGRAM_PARAMETERS" value="SERVER --hostname=localhost" />
+    <option name="PROGRAM_PARAMETERS" value="SERVER --port=&quot;4444&quot;" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

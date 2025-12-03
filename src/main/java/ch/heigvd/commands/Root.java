@@ -39,7 +39,14 @@ public class Root implements Runnable {
     protected TYPE type;
 
     @CommandLine.Option(
-            names = {"-", "--hostname"},
+            names = {"-p", "--port"},
+            description = "Port used by the app",
+            defaultValue = "4444"
+    )
+    protected int port;
+
+    @CommandLine.Option(
+            names = {"-hn", "--hostname"},
             description = "Hostname used by the client to contact the server",
             defaultValue = "localhost"
     )
@@ -50,7 +57,7 @@ public class Root implements Runnable {
         System.out.println("Lancement du serveur...");
 
         ServerP4 serverP4 = new ServerP4();
-        serverP4.start();
+        serverP4.start(port);
     }
 
     //------------------------- CLIENT -------------------------------------------------------------------------
@@ -58,7 +65,7 @@ public class Root implements Runnable {
     private void lancement_client() {
         System.out.println("Lancement du client...");
 
-        Client client = new Client(hostname);
+        Client client = new Client(hostname, port);
         if(client.connect()) {
             client.run();
         }
