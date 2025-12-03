@@ -1,24 +1,23 @@
-# Protocol applicatif - Puissance4
+# Protocole applicatif - Puissance4
 
-### table des matières
-- [Overview](#1-overview)
-- [Protocol de communication](#2-protocol-de-communication)
+### Table des matières
+- [Aperçu](#1-aperçu)
+- [Protocole de communication](#2-protocole-de-communication)
 - [Messages](#3-messages)
 - [Exemples](#4-exemples)
 
 
 
-## 1. Overview
+## 1. Aperçu
 Puissance4 est un protocole qui définit un système de communication applicatif permettant à deux utilisateurs distants de se connecter à un serveur et de jouer une partie de Puissance 4.
 Le serveur agit comme arbitre : il gère les connexions, coordonne les échanges entre les joueurs, valide les actions (placements de jetons), maintient l’état du plateau de jeu et détermine la fin de la partie.
 Le protocole garantit ainsi une interaction cohérente, synchronisée et fiable entre les deux clients.
 
-## 2. Protocol de communication
+## 2. Protocole de communication
 
 Le protocole Puissance4 est un protocole de transport de messages textuels.
 Il s’appuie sur TCP (Transmission Control Protocol) afin de garantir la fiabilité de la transmission des données et l’intégrité des échanges entre le serveur et les clients.
-Toutes les communications du protocole doivent utiliser le port 4444.
-
+Toutes les communications utilise par défaut le port 4444. Cependant, il est possible d'employer un autre port si nécessaire. 
 
 
 ## 3. Messages
