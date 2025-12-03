@@ -4,6 +4,7 @@
 ![Java](https://img.shields.io/badge/java-21-orange?logo=openjdk)
 
 ## Introduction
+Ce projet met en place un petit système client–serveur en TCP pour jouer à Puissance 4 en local ou via Docker.
 
 ## Table des matières
 - [Introduction](#introduction)
@@ -18,6 +19,8 @@
     - [Publication sur GitHub Container Registry](#publication-sur-github-container-registry)
     - [Utiliser l'image depuis GitHub Container Registry](#utiliser-limage-depuis-github-container-registry)
 - [Run configuration](#run-configuration)
+  - [Local](#local)
+  - [Docker](#image-docker)
 - [Auteurs](#auteurs)
 
 ## Clone et Build
@@ -194,26 +197,27 @@ docker pull ghcr.io/quentinmichon/p4app:latest
 ```
 
 ## Run configuration
-Nous vous fournissons plusieurs run configuration pour vous simplifier la vie si vous êtes sur l'IDE Jetbrains-IDEA.
+Nous vous mettons à disposition plusieurs configurations d'exécution pour vous faciliter le travail si vous utilisez sur l'IDE JetBrains IntelliJ IDEA.
 
 ### Local
-En local, il faut run le `SERVER` avant de run un `CLIENT`.
+En exécution local, vous devez run le `SERVER` avant d'exécuter un `CLIENT`.
 
 Exemple d'utilisation :
 1. Run un serveur avec `SERVER Local` 
 2. Run le premier client avec `CLIENT1 Local`
 3. Run le deuxième client avec `CLIENT2 Local`
 
-### Docker
+### Image Docker
 #### Build l'image du projet
-Vous pouvez build l'image du projet avec comme nom et tag `p4app:latest` via la commande `Build image`.
+Vous pouvez build l'image du projet sous le nom et le tag `p4app:latest` via la commande `Build image`.
 
 #### Build et Run Server/Client
-Comme en local, il faut toujours lancer le serveur avant de lancer un client. Avec la subtilité en plus qu'il faut avoir créé un `docker network` avant de lancer le serveur.
-Pour simplifier le processus, vous pouvez suivre les étapes suivantes :
-1. Créer le docker network `p4network` s'il n'existe pas, build l'image docker `p4app:latest` et run le serveur dans un container avec le nom `server-p4` via la config `Build Run Server`
-2. Lance un container pour le premier client `Client1` via la confid `CLIENT1 Docker`
-3. Lance un container pour le deuxième client `Client2` via la confid `CLIENT2 Docker`
+Comme en local, le serveur doit toujours être lancé avant les client. La seule différence est qu'un `docker network` doit être crée avant de démarrer le serveur.
+
+Pour simplifier ce processus, vous pouvez suivre les étapes suivantes :
+1. Créer le docker network `p4network` s'il n'existe pas, builder l'image docker `p4app:latest` et run le serveur dans un conteneur nommé `server-p4` via la config `Build Run Server`
+2. Lancer un conteneur pour le premier client `Client1` via la configuration `CLIENT1 Docker`
+3. Lancer un conteneur pour le deuxième client `Client2` via la configuration `CLIENT2 Docker`
 
 ## Auteurs
 - [Quentin Michon](https://github.com/QuentinMichon)
