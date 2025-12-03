@@ -75,11 +75,12 @@ Une fois la partie terminée, les deux clients se déconnectent et le serveur es
 
 ### Serveur
 
-Pour lancer le serveur il suffit d'indiquer le `<type> : SERVER`. Le serveur prend l'adresse IP 0.0.0.0 et le port 4444.
+Pour lancer le serveur il suffit d'indiquer le `<type> : SERVER`. Le serveur écoute le port 4444 par défaut, il est possible de spécifier le port
+à utiliser avec l'option `--port`.
 
 ```bash
 // se trouver à la racine du projet /dai-work-2/
-java -jar target/dai-work-2-1.0-SNAPSHOT.jar SERVER
+java -jar target/dai-work-2-1.0-SNAPSHOT.jar SERVER --port="12345"
 ```
 
 Pour arrêter un serveur, il suffit de faire un `ctrl + c` dans le terminal.
@@ -115,7 +116,7 @@ Veuillez suivre les étapes ci-dessous dans l'ordre pour configurer correctement
 
 #### Créer l'image
 ```bash
-docker build -t p4app .
+docker build -t p4app:latest .
 ```
 
 #### Lancement du réseau
@@ -132,7 +133,12 @@ Vous pouvez utiliser n'importe quel nom pour le réseau.
 #Lancement du serveur en arrière plan
 docker run -d --network p4network --name server-p4 p4app:latest
 ```
-Le nom du serveur sera utilisé par le client dans l'option `--hostname`.
+Si besoin, rajoutez l'option `--port` pour modifier le port sur lequel le serveur écoute
+```bash
+docker run -d --network p4network --name server-p4 p4app:latest --port="12345"
+```
+
+Le nom du serveur (ici server-p4) sera utilisé par le client dans l'option `--hostname`.
 Vous pouvez voir les logs avec la commande suivante :
 ```bash
 # affiche les logs du serveur dans le terminal
@@ -151,6 +157,12 @@ docker run -it --rm --network p4network --name client2 p4app:latest CLIENT --hos
 ```
 Assurez-vous d’utiliser le nom correct du réseau pour l’option `--network`, ainsi que le nom du serveur défini précédemment pour l’option `--hostname`.
 Et faites attention à ne pas utiliser deux fois le même nom de client pour l'option `--name`.
+
+Si besoin, rajoutez l'option `--port` comme pour le serveur afin d'indiquer le port à atteindre pour le client
+```bash
+# lance le client 1
+docker run -it --rm --network p4network --name client1 p4app:latest CLIENT --hostname=server-p4 --port="12345"
+```
 
 ### Publication sur GitHub Container Registry
 1. Créer l'image en local via Dockerfile
