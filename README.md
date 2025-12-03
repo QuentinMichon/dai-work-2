@@ -4,6 +4,7 @@
 ![Java](https://img.shields.io/badge/java-21-orange?logo=openjdk)
 
 ## Introduction
+Ce projet met en place un petit système client–serveur en TCP pour jouer à Puissance 4 en local ou via Docker.
 
 ## Table des matières
 - [Introduction](#introduction)
@@ -17,6 +18,9 @@
 - [Docker](#docker)
     - [Publication sur GitHub Container Registry](#publication-sur-github-container-registry)
     - [Utiliser l'image depuis GitHub Container Registry](#utiliser-limage-depuis-github-container-registry)
+- [Run configuration](#run-configuration)
+  - [Local](#local)
+  - [Docker](#image-docker)
 - [Auteurs](#auteurs)
 
 ## Clone et Build
@@ -68,13 +72,18 @@ La partie est arbitrée par le serveur, tandis que les clients ne servent que d�
 Actuellement, le serveur ne peut gérer qu’une seule partie à la fois. Si un troisième joueur tente de se connecter, il reçoit un message d’erreur indiquant que la partie est complète.
 Une fois la partie terminée, les deux clients se déconnectent et le serveur est à nouveau prêt à accueillir deux nouveaux joueurs.
 
+>[!HINT]
+> 
+> Vous trouvez plusieurs run configuration pour l'IDE Jetbrains-IDEA dans la section [Run configuration](#run-configuration).
+
 ### Serveur
 
-Pour lancer le serveur il suffit d'indiquer le `<type> : SERVER`. Le serveur prend l'adresse IP 0.0.0.0 et le port 4444.
+Pour lancer le serveur il suffit d'indiquer le `<type> : SERVER`. Le serveur écoute le port 4444 par défaut, il est possible de spécifier le port
+à utiliser avec l'option `--port`.
 
 ```bash
 // se trouver à la racine du projet /dai-work-2/
-java -jar target/dai-work-2-1.0-SNAPSHOT.jar SERVER
+java -jar target/dai-work-2-1.0-SNAPSHOT.jar SERVER --port="12345"
 ```
 
 Pour arrêter un serveur, il suffit de faire un `ctrl + c` dans le terminal.
@@ -110,7 +119,7 @@ Veuillez suivre les étapes ci-dessous dans l'ordre pour configurer correctement
 
 #### Créer l'image
 ```bash
-docker build -t p4app .
+docker build -t p4app:latest .
 ```
 
 #### Lancement du réseau
@@ -127,7 +136,12 @@ Vous pouvez utiliser n'importe quel nom pour le réseau.
 #Lancement du serveur en arrière plan
 docker run -d --network p4network --name server-p4 p4app:latest
 ```
-Le nom du serveur sera utilisé par le client dans l'option `--hostname`.
+Si besoin, rajoutez l'option `--port` pour modifier le port sur lequel le serveur écoute
+```bash
+docker run -d --network p4network --name server-p4 p4app:latest --port="12345"
+```
+
+Le nom du serveur (ici server-p4) sera utilisé par le client dans l'option `--hostname`.
 Vous pouvez voir les logs avec la commande suivante :
 ```bash
 # affiche les logs du serveur dans le terminal
@@ -146,6 +160,12 @@ docker run -it --rm --network p4network --name client2 p4app:latest CLIENT --hos
 ```
 Assurez-vous d’utiliser le nom correct du réseau pour l’option `--network`, ainsi que le nom du serveur défini précédemment pour l’option `--hostname`.
 Et faites attention à ne pas utiliser deux fois le même nom de client pour l'option `--name`.
+
+Si besoin, rajoutez l'option `--port` comme pour le serveur afin d'indiquer le port à atteindre pour le client
+```bash
+# lance le client 1
+docker run -it --rm --network p4network --name client1 p4app:latest CLIENT --hostname=server-p4 --port="12345"
+```
 
 ### Publication sur GitHub Container Registry
 1. Créer l'image en local via Dockerfile
@@ -176,58 +196,28 @@ Vous pouvez récuperer l'image via la commande suivante :
 docker pull ghcr.io/quentinmichon/p4app:latest
 ```
 
-## Docker
-Pour unifier l'environnement de développement et d'exécution, un Dockerfile a été mis en place afin que le client et 
-le serveur puissent être exécutés dans des containers. Ceux-ci communiquent entre eux via un réseau Docker, que vous devrez démarrer manuellement. 
-Veuillez suivre les étapes ci-dessous dans l'ordre pour configurer correctement l'environnement.
+## Run configuration
+Nous vous mettons à disposition plusieurs configurations d'exécution pour vous faciliter le travail si vous utilisez sur l'IDE JetBrains IntelliJ IDEA.
 
-> [!CAUTION]
-> Vous devez absolument avoir le fichier .jar du projet comme ceci target/dai-work-2-1.0-SNAPSHOT.jar
-> 
+### Local
+En exécution local, vous devez run le `SERVER` avant d'exécuter un `CLIENT`.
 
-> [!CAUTION]
-> Vous devez avoir Docker déjà installé sur votre machine.
-> [Lien d'installation officiel](https://docs.docker.com/engine/install/)
-> 
+Exemple d'utilisation :
+1. Run un serveur avec `SERVER Local` 
+2. Run le premier client avec `CLIENT1 Local`
+3. Run le deuxième client avec `CLIENT2 Local`
 
-#### Créer l'image
-```bash
-docker build -t p4app .
-```
+### Image Docker
+#### Build l'image du projet
+Vous pouvez build l'image du projet sous le nom et le tag `p4app:latest` via la commande `Build image`.
 
-#### Lancement du réseau
+#### Build et Run Server/Client
+Comme en local, le serveur doit toujours être lancé avant les client. La seule différence est qu'un `docker network` doit être crée avant de démarrer le serveur.
 
-```bash
-# création du réseau docker
-docker network create p4network
-```
-Vous pouvez utiliser n'importe quel nom pour le réseau. 
-
-#### Lancement du serveur
-
-```bash
-#Lancement du serveur en arrière plan
-docker run -d --network p4network --name server-p4 p4app:latest
-```
-Le nom du serveur sera utilisé par le client dans l'option `--hostame`.
-Vous pouvez voir les logs avec la commande suivante :
-```bash
-# affiche les logs du serveur dans le terminal
-docker logs -f server-p4
-```
-
-#### Lancement d'un client en mode itrératif 
-
-```bash
-# lance le client 1
-docker run -it --rm --network p4network --name client1 p4app:latest CLIENT --hostname=server-p4
-```
-```bash
-# lance le client 2
-docker run -it --rm --network p4network --name client2 p4app:latest CLIENT --hostname=server-p4
-```
-Assurez-vous d’utiliser le nom correct du réseau pour l’option `--network`, ainsi que le nom du serveur défini précédemment pour l’option `--hostname`.
-Et faite attention à ne pas utiliser deux fois le même nom de client pour l'option `--name`.
+Pour simplifier ce processus, vous pouvez suivre les étapes suivantes :
+1. Créer le docker network `p4network` s'il n'existe pas, builder l'image docker `p4app:latest` et run le serveur dans un conteneur nommé `server-p4` via la config `Build Run Server`
+2. Lancer un conteneur pour le premier client `Client1` via la configuration `CLIENT1 Docker`
+3. Lancer un conteneur pour le deuxième client `Client2` via la configuration `CLIENT2 Docker`
 
 ## Auteurs
 - [Quentin Michon](https://github.com/QuentinMichon)

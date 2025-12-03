@@ -26,8 +26,8 @@ public class Client {
      *
      * @param hostname the hostname or IP address of the server to connect to
      */
-    public Client(String hostname) {
-        tcpClient = new TcpClient(hostname, 4444);
+    public Client(String hostname, int port) {
+        tcpClient = new TcpClient(hostname, port);
     }
 
     /**

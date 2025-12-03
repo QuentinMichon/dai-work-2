@@ -57,10 +57,10 @@ public class ServerP4 {
      * Accepts incoming clients, assigns them to a player slot,
      * and launches a corresponding ClientHandler thread.
      */
-    public void start() {
-        try (ServerSocket serverSocket = new ServerSocket(4444)) {
+    public void start(int port) {
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("[Server p4] started");
-            System.out.println("[Server p4] listening on port " + 4444);
+            System.out.println("[Server p4] listening on port " + port);
 
             while (!serverSocket.isClosed()) {
                 Socket clientSocket = serverSocket.accept();  // bloquant
